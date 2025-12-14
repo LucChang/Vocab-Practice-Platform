@@ -20,7 +20,7 @@ export async function POST(daabain: Request) {
         const prompt = `
       Provide the meaning, part of speech, and a simple example sentence for the English word "${word}".
       Return ONLY a JSON object with the following keys:
-      - meaning: A concise definition in Traditional Chinese (繁體中文).
+      - meaning: a definition in Traditional Chinese (繁體中文).
       - partOfSpeech: The part of speech (e.g., noun, verb, adj) in English or Chinese.
       - example: A simple English example sentence containing the word.
       
@@ -30,10 +30,9 @@ export async function POST(daabain: Request) {
         const result = await model.generateContent(prompt);
         const response = await result.response;
         const text = response.text();
-
+        console.log(text);
         // Clean up potential markdown code blocks if Gemini adds them despite instructions
-        const cleanedText = text.replace(/```json/g, '').replace(/```/g, '').trim();
-
+        const cleanedText = text.replace(/```json/g, '').replace(/```/g, '').trim()
         try {
             const json = JSON.parse(cleanedText);
             return NextResponse.json(json);
