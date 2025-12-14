@@ -14,6 +14,7 @@ export async function DELETE(
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error('Error deleting word:', error);
+        
         return NextResponse.json({ error: 'Failed to delete word' }, { status: 500 });
     }
 }

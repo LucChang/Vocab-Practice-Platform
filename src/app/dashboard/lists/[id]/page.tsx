@@ -25,6 +25,8 @@ export default function WordListPage({ params }: { params: Promise<{ id: string 
     const [loading, setLoading] = useState(true);
     const [newWord, setNewWord] = useState({ word: '', meaning: '', partOfSpeech: '', example: '' });
     const [adding, setAdding] = useState(false);
+    const [filling, setFilling] = useState(false);
+    const [generating, setGenerating] = useState(false);
 
     useEffect(() => {
         fetchList();
@@ -41,6 +43,58 @@ export default function WordListPage({ params }: { params: Promise<{ id: string 
             console.error('Failed to load list', error);
         } finally {
             setLoading(false);
+        }
+    }
+
+    async function handleGenerateQuestions() {
+        if (!list || list.words.length === 0) {
+            alert('Add some words first!');
+            return;
+        }
+        setGenerating(true);
+        try {
+            const res = await fetch(`/api/word-lists/${id}/generate-questions`, {
+                method: 'POST',
+            });
+            if (res.ok) {
+                const data = await res.json();
+                alert(`Successfully generated ${data.count} questions!`);
+            } else {
+                alert('Failed to generate questions. Please try again.');
+            }
+        } catch (error) {
+            console.error('Failed to generate questions', error);
+            alert('An error occurred.');
+        } finally {
+            setGenerating(false);
+        }
+    }
+
+    async function handleAutoFill() {
+        if (!newWord.word) return;
+        setFilling(true);
+        try {
+            const res = await fetch('/api/ai/word-lookup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ word: newWord.word }),
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                setNewWord(prev => ({
+                    ...prev,
+                    meaning: data.meaning || prev.meaning,
+                    partOfSpeech: data.partOfSpeech || prev.partOfSpeech,
+                    example: data.example || prev.example,
+                }));
+            } else {
+                alert('Failed to auto-fill. Please check your API key or try again.');
+            }
+        } catch (error) {
+            console.error('Auto-fill failed', error);
+        } finally {
+            setFilling(false);
         }
     }
 
@@ -89,9 +143,18 @@ export default function WordListPage({ params }: { params: Promise<{ id: string 
                 <ArrowLeft size={20} /> Back to Dashboard
             </Link>
 
-            <header style={{ marginBottom: '40px' }}>
-                <h1 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '0.5rem' }}>{list.title}</h1>
-                <p style={{ color: 'var(--text-muted)' }}>{list.description}</p>
+            <header style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                    <h1 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '0.5rem' }}>{list.title}</h1>
+                    <p style={{ color: 'var(--text-muted)' }}>{list.description}</p>
+                </div>
+                <button
+                    className="btn btn-primary"
+                    onClick={handleGenerateQuestions}
+                    disabled={generating || list.words.length === 0}
+                >
+                    {generating ? 'Generating...' : 'Generate Questions'}
+                </button>
             </header>
 
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '40px' }}>
@@ -137,14 +200,26 @@ export default function WordListPage({ params }: { params: Promise<{ id: string 
                         <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '20px' }}>Add New Word</h3>
                         <form onSubmit={handleAddWord} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             <div>
-                                <input
-                                    type="text"
-                                    className="input"
-                                    placeholder="Word (e.g. Ephemeral)"
-                                    value={newWord.word}
-                                    onChange={(e) => setNewWord({ ...newWord, word: e.target.value })}
-                                    required
-                                />
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                    <input
+                                        type="text"
+                                        className="input"
+                                        placeholder="Word (e.g. Ephemeral)"
+                                        value={newWord.word}
+                                        onChange={(e) => setNewWord({ ...newWord, word: e.target.value })}
+                                        required
+                                    />
+                                    <button
+                                        type="button"
+                                        className="btn"
+                                        style={{ background: 'var(--surface)', border: '1px solid var(--glass-border)', padding: '12px' }}
+                                        onClick={handleAutoFill}
+                                        disabled={filling || !newWord.word}
+                                        title="Auto-fill with AI"
+                                    >
+                                        {filling ? '...' : '✨'}
+                                    </button>
+                                </div>
                             </div>
                             <div>
                                 <input
