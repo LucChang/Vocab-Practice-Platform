@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Plus, BookOpen, Brain, TrendingUp, MoreVertical } from 'lucide-react';
+import { Loading } from '@/components/ui';
 
 interface WordList {
     id: string;
@@ -36,6 +37,8 @@ export default function Dashboard() {
         }
         fetchLists();
     }, []);
+
+    if (loading) return <Loading />;
 
     return (
         <div className="container" style={{ padding: '40px 20px' }}>
@@ -88,9 +91,7 @@ export default function Dashboard() {
                     <h2 style={{ fontSize: '1.5rem', fontWeight: 600 }}>Your Word Lists</h2>
                 </div>
 
-                {loading ? (
-                    <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>Loading...</div>
-                ) : wordLists.length === 0 ? (
+                {wordLists.length === 0 ? (
                     <div className="card" style={{ textAlign: 'center', padding: '60px 20px' }}>
                         <div style={{ marginBottom: '20px', color: 'var(--text-muted)' }}>
                             <BookOpen size={48} style={{ opacity: 0.5 }} />

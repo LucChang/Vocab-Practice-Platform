@@ -3,6 +3,9 @@
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Plus, Trash2, Volume2 } from 'lucide-react';
+import { Loading } from '@/components/ui';
+
+
 
 interface Word {
     id: string;
@@ -134,7 +137,7 @@ export default function WordListPage({ params }: { params: Promise<{ id: string 
         }
     }
 
-    if (loading) return <div className="container" style={{ padding: '40px' }}>Loading...</div>;
+    if (loading) return <Loading />;
     if (!list) return <div className="container" style={{ padding: '40px' }}>List not found</div>;
 
     return (

@@ -1,20 +1,14 @@
-'use client'; 
+import { LoadingOverlay, Box } from '@mantine/core';
 
-import { useDisclosure } from '@mantine/hooks';
-import { LoadingOverlay, Button, Group, Box } from '@mantine/core';
-
-// 使用 'export' 關鍵字進行具名導出
-export function LoadingOverlayDemo() {
-  const [visible, { toggle }] = useDisclosure(false);
-
+export function Loading() {
   return (
-    // ... 組件的 JSX ...
-    <Group justify="center" mt="md">
-        <Button onClick={toggle}>
-          {visible ? '隱藏載入畫面' : '顯示載入畫面'}
-        </Button>
-    </Group>
+    <Box pos="relative" h="100vh">
+      <LoadingOverlay
+        visible={true}
+        zIndex={1000}
+        overlayProps={{ radius: 'sm', blur: 2 }}
+        loaderProps={{ color: 'pink', type: 'bars' }}
+      />
+    </Box>
   );
 }
-
-// 注意：如果使用具名導出，文件末尾就不需要 'export default LoadingOverlayDemo;' 了
