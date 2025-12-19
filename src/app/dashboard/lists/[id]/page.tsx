@@ -101,6 +101,47 @@ export default function WordListPage({ params }: { params: Promise<{ id: string 
         }
     }
 
+    async function examine_fill() {
+        if (!list || list.words.length === 0) return;
+
+        const incompleteWords = list.words.filter(w => !w.meaning || !w.partOfSpeech || !w.example);
+        if (incompleteWords.length === 0) {
+            alert('All words are already filled!');
+            return;
+        }
+
+        setFilling(true);
+        try {
+            for (const word of incompleteWords) {
+                const res = await fetch('/api/ai/word-lookup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ word: word.word }),
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    // Update the word in the database
+                    await fetch(`/api/words/${word.id}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            meaning: word.meaning || data.meaning,
+                            partOfSpeech: word.partOfSpeech || data.partOfSpeech,
+                            example: word.example || data.example,
+                        }),
+                    });
+                }
+            }
+            fetchList(); // Refresh the list to show updated data
+        } catch (error) {
+            console.error('Examine fill failed', error);
+            alert('An error occurred during auto-fill.');
+        } finally {
+            setFilling(false);
+        }
+    }
+
     async function handleDeleteWord(wordId: string) {
         if (!confirm('Are you sure you want to delete this word?')) return;
 
@@ -151,13 +192,22 @@ export default function WordListPage({ params }: { params: Promise<{ id: string 
                     <h1 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '0.5rem' }}>{list.title}</h1>
                     <p style={{ color: 'var(--text-muted)' }}>{list.description}</p>
                 </div>
-                <button
-                    className="btn btn-primary"
-                    onClick={handleGenerateQuestions}
-                    disabled={generating || list.words.length === 0}
-                >
-                    {generating ? 'Generating...' : 'Generate Questions'}
-                </button>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                        className="btn btn-accent"
+                        onClick={examine_fill}
+                        disabled={filling}
+                    >
+                        {filling ? '...' : '✨'}
+                    </button>
+                    <button
+                        className="btn btn-primary"
+                        onClick={handleGenerateQuestions}
+                        disabled={generating || list.words.length === 0}
+                    >
+                        {generating ? 'Generating...' : 'Generate Questions'}
+                    </button>
+                </div>
             </header>
 
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '40px' }}>
