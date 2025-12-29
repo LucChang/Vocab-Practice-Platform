@@ -103,37 +103,67 @@ export default function WordListPage({ params }: { params: Promise<{ id: string 
 
     async function examine_fill() {
         if (!list || list.words.length === 0) return;
-
         const incompleteWords = list.words.filter(w => !w.meaning || !w.partOfSpeech || !w.example);
+        console.log(incompleteWords);
         if (incompleteWords.length === 0) {
             alert('All words are already filled!');
             return;
         }
 
         setFilling(true);
-        try {
-            for (const word of incompleteWords) {
-                const res = await fetch('/api/ai/word-lookup', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ word: word.word }),
-                });
+        let failedCount = 0;
 
-                if (res.ok) {
-                    const data = await res.json();
-                    // Update the word in the database
-                    await fetch(`/api/words/${word.id}`, {
-                        method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            meaning: word.meaning || data.meaning,
-                            partOfSpeech: word.partOfSpeech || data.partOfSpeech,
-                            example: word.example || data.example,
-                        }),
-                    });
+        try {
+            // Batch lookup
+            const res = await fetch('/api/ai/batch-word-lookup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ words: incompleteWords.map(w => w.word) }),
+            });
+
+            if (res.ok) {
+                const results = await res.json();
+                console.log('Batch API results:', results);
+
+                // Process results
+                for (const word of incompleteWords) {
+                    // Find the result for this word by case-insensitive matching
+                    const data = results.find((r: any) => r.word.toLowerCase() === word.word.toLowerCase());
+
+                    if (data) {
+                        console.log(`Updating ${word.word} with:`, data);
+                        // Update the word in the database
+                        const updateRes = await fetch(`/api/words/${word.id}`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                meaning: !word.meaning ? data.meaning : word.meaning,
+                                partOfSpeech: !word.partOfSpeech ? data.partOfSpeech : word.partOfSpeech,
+                                example: !word.example ? data.example : word.example,
+                            }),
+                        });
+
+                        if (!updateRes.ok) {
+                            console.error(`Failed to update DB for ${word.word}`);
+                            failedCount++;
+                        }
+                    } else {
+                        console.warn(`No AI result found for ${word.word}`);
+                        failedCount++;
+                    }
                 }
+
+                fetchList(); // Refresh the list
+
+                if (failedCount > 0) {
+                    alert(`Finished with ${failedCount} errors. Some words could not be updated.`);
+                }
+            } else {
+                const errData = await res.json();
+                console.error('Batch lookup failed:', errData);
+                alert(`Failed to batch lookup words via AI: ${errData.details || errData.error || 'Unknown error'}`);
             }
-            fetchList(); // Refresh the list to show updated data
+
         } catch (error) {
             console.error('Examine fill failed', error);
             alert('An error occurred during auto-fill.');
