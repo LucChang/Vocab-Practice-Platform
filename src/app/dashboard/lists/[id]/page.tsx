@@ -103,7 +103,7 @@ export default function WordListPage({ params }: { params: Promise<{ id: string 
 
     async function examine_fill() {
         if (!list || list.words.length === 0) return;
-        const incompleteWords = list.words.filter(w => !w.meaning || !w.partOfSpeech || !w.example);
+        const incompleteWords = list.words.filter(w => !w.meaning?.trim() || !w.partOfSpeech?.trim() || !w.example?.trim());
         console.log(incompleteWords);
         if (incompleteWords.length === 0) {
             alert('All words are already filled!');
@@ -311,7 +311,6 @@ export default function WordListPage({ params }: { params: Promise<{ id: string 
                                     placeholder="Meaning (e.g. Lasting for a short time)"
                                     value={newWord.meaning}
                                     onChange={(e) => setNewWord({ ...newWord, meaning: e.target.value })}
-                                    required
                                 />
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
