@@ -37,7 +37,7 @@ model WordList {
 model Word {
   id           String   @id @default(uuid())
   word         String
-  meaning      String
+  meaning      String?
   partOfSpeech String?
   example      String?
   difficulty   Int?     @default(1)

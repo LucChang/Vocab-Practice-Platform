@@ -36,8 +36,8 @@ export async function POST(
         const body = await request.json();
         const { word, meaning, partOfSpeech, example } = body;
 
-        if (!word || !meaning) {
-            return NextResponse.json({ error: 'Word and meaning are required' }, { status: 400 });
+        if (!word) {
+            return NextResponse.json({ error: 'Word is required' }, { status: 400 });
         }
 
         const newWord = await prisma.word.create({

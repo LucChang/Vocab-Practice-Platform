@@ -30,6 +30,9 @@ export default function WordListPage({ params }: { params: Promise<{ id: string 
     const [adding, setAdding] = useState(false);
     const [filling, setFilling] = useState(false);
     const [generating, setGenerating] = useState(false);
+    const [editingWordId, setEditingWordId] = useState<string | null>(null);
+    const [editForm, setEditForm] = useState<Partial<Word>>({});
+
 
     useEffect(() => {
         fetchList();
@@ -172,6 +175,42 @@ export default function WordListPage({ params }: { params: Promise<{ id: string 
         }
     }
 
+    function handleStartEdit(word: Word) {
+        setEditingWordId(word.id);
+        setEditForm({
+            word: word.word,
+            meaning: word.meaning,
+            partOfSpeech: word.partOfSpeech,
+            example: word.example,
+        });
+    }
+
+    function handleCancelEdit() {
+        setEditingWordId(null);
+        setEditForm({});
+    }
+
+    async function handleSaveEdit(wordId: string) {
+        try {
+            const res = await fetch(`/api/words/${wordId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(editForm),
+            });
+
+            if (res.ok) {
+                setEditingWordId(null);
+                setEditForm({});
+                fetchList(); // Refresh list
+            } else {
+                alert('Failed to save changes');
+            }
+        } catch (error) {
+            console.error('Failed to update word', error);
+            alert('An error occurred while saving.');
+        }
+    }
+
     async function handleDeleteWord(wordId: string) {
         if (!confirm('Are you sure you want to delete this word?')) return;
 
@@ -252,25 +291,72 @@ export default function WordListPage({ params }: { params: Promise<{ id: string 
                             </div>
                         ) : (
                             list.words.map((word) => (
-                                <div key={word.id} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <div>
-                                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '4px' }}>
-                                            <span style={{ fontSize: '1.25rem', fontWeight: 600 }}>{word.word}</span>
-                                            {word.partOfSpeech && (
-                                                <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>{word.partOfSpeech}</span>
-                                            )}
+                                <div key={word.id} className="card">
+                                    {editingWordId === word.id ? (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                                <input
+                                                    className="input"
+                                                    value={editForm.word || ''}
+                                                    onChange={e => setEditForm(prev => ({ ...prev, word: e.target.value }))}
+                                                    placeholder="Word"
+                                                />
+                                                <input
+                                                    className="input"
+                                                    value={editForm.partOfSpeech || ''}
+                                                    onChange={e => setEditForm(prev => ({ ...prev, partOfSpeech: e.target.value }))}
+                                                    placeholder="Part of Speech"
+                                                />
+                                            </div>
+                                            <input
+                                                className="input"
+                                                value={editForm.meaning || ''}
+                                                onChange={e => setEditForm(prev => ({ ...prev, meaning: e.target.value }))}
+                                                placeholder="Meaning"
+                                            />
+                                            <input
+                                                className="input"
+                                                value={editForm.example || ''}
+                                                onChange={e => setEditForm(prev => ({ ...prev, example: e.target.value }))}
+                                                placeholder="Example"
+                                            />
+                                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                                                <button className="btn" onClick={handleCancelEdit} style={{ fontSize: '0.875rem', padding: '8px 16px' }}>Cancel</button>
+                                                <button className="btn btn-primary" onClick={() => handleSaveEdit(word.id)} style={{ fontSize: '0.875rem', padding: '8px 16px' }}>Save</button>
+                                            </div>
                                         </div>
-                                        <div style={{ marginBottom: '4px' }}>{word.meaning}</div>
-                                        {word.example && (
-                                            <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Ex: {word.example}</div>
-                                        )}
-                                    </div>
-                                    <button
-                                        style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}
-                                        onClick={() => handleDeleteWord(word.id)}
-                                    >
-                                        <Trash2 size={18} />
-                                    </button>
+                                    ) : (
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <div>
+                                                <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '4px' }}>
+                                                    <span style={{ fontSize: '1.25rem', fontWeight: 600 }}>{word.word}</span>
+                                                    {word.partOfSpeech && (
+                                                        <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>{word.partOfSpeech}</span>
+                                                    )}
+                                                </div>
+                                                <div style={{ marginBottom: '4px' }}>{word.meaning}</div>
+                                                {word.example && (
+                                                    <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Ex: {word.example}</div>
+                                                )}
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                <button
+                                                    style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}
+                                                    onClick={() => handleStartEdit(word)}
+                                                    title="Edit"
+                                                >
+                                                    <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>edit_note</span>
+                                                </button>
+                                                <button
+                                                    style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}
+                                                    onClick={() => handleDeleteWord(word.id)}
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             ))
                         )}
