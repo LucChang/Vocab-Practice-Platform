@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Plus, Trash2, Volume2 } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Volume2, Play } from 'lucide-react';
 import { Loading } from '@/components/ui';
 
 
@@ -19,7 +19,11 @@ interface WordList {
     id: string;
     title: string;
     description: string | null;
+
     words: Word[];
+    _count: {
+        questions: number;
+    };
 }
 
 export default function WordListPage({ params }: { params: Promise<{ id: string }> }) {
@@ -29,7 +33,7 @@ export default function WordListPage({ params }: { params: Promise<{ id: string 
     const [newWord, setNewWord] = useState({ word: '', meaning: '', partOfSpeech: '', example: '' });
     const [adding, setAdding] = useState(false);
     const [filling, setFilling] = useState(false);
-    const [generating, setGenerating] = useState(false);
+
     const [editingWordId, setEditingWordId] = useState<string | null>(null);
     const [editForm, setEditForm] = useState<Partial<Word>>({});
 
@@ -52,29 +56,7 @@ export default function WordListPage({ params }: { params: Promise<{ id: string 
         }
     }
 
-    async function handleGenerateQuestions() {
-        if (!list || list.words.length === 0) {
-            alert('Add some words first!');
-            return;
-        }
-        setGenerating(true);
-        try {
-            const res = await fetch(`/api/word-lists/${id}/generate-questions`, {
-                method: 'POST',
-            });
-            if (res.ok) {
-                const data = await res.json();
-                alert(`Successfully generated ${data.count} questions!`);
-            } else {
-                alert('Failed to generate questions. Please try again.');
-            }
-        } catch (error) {
-            console.error('Failed to generate questions', error);
-            alert('An error occurred.');
-        } finally {
-            setGenerating(false);
-        }
-    }
+
 
     async function handleAutoFill() {
         if (!newWord.word) return;
@@ -261,23 +243,26 @@ export default function WordListPage({ params }: { params: Promise<{ id: string 
                     <h1 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '0.5rem' }}>{list.title}</h1>
                     <p style={{ color: 'var(--text-muted)' }}>{list.description}</p>
                 </div>
+
                 <div style={{ display: 'flex', gap: '8px' }}>
+                    <Link
+                        href={`/dashboard/lists/${list.id}/quiz`}
+                        className="btn btn-primary"
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                    >
+                        <Play size={18} />
+                        Practice Quiz
+                    </Link>
                     <button
                         className="btn btn-accent"
                         onClick={examine_fill}
                         disabled={filling}
+                        title="Auto-fill missing details"
                     >
                         {filling ? '...' : '✨'}
                     </button>
-                    <button
-                        className="btn btn-primary"
-                        onClick={handleGenerateQuestions}
-                        disabled={generating || list.words.length === 0}
-                    >
-                        {generating ? 'Generating...' : 'Generate Questions'}
-                    </button>
                 </div>
-            </header>
+            </header >
 
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '40px' }}>
                 {/* Word List */}
@@ -426,6 +411,6 @@ export default function WordListPage({ params }: { params: Promise<{ id: string 
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }
