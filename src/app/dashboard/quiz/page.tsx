@@ -15,6 +15,7 @@ interface Question {
 
 export default function GeneralQuizPage() {
     const [mode, setMode] = useState<'en-zh' | 'zh-en' | null>(null);
+    const [useAI, setUseAI] = useState(false);
     const [questions, setQuestions] = useState<Question[]>([]);
     const [loading, setLoading] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -29,7 +30,7 @@ export default function GeneralQuizPage() {
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch(`/api/quiz/generate?mode=${selectedMode}&count=10`);
+            const res = await fetch(`/api/quiz/generate?mode=${selectedMode}&count=10&ai=${useAI}`);
             if (res.ok) {
                 const data = await res.json();
                 setQuestions(data);
@@ -102,6 +103,24 @@ export default function GeneralQuizPage() {
                             {error}
                         </div>
                     )}
+
+                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '32px' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '12px', padding: '12px 20px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '100px' }}>
+                            <div style={{ position: 'relative', width: '40px', height: '24px' }}>
+                                <input
+                                    type="checkbox"
+                                    checked={useAI}
+                                    onChange={(e) => setUseAI(e.target.checked)}
+                                    style={{ opacity: 0, width: 0, height: 0 }}
+                                />
+                                <span style={{ position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: useAI ? 'var(--primary)' : '#ccc', transition: '.4s', borderRadius: '34px' }}></span>
+                                <span style={{ position: 'absolute', content: '""', height: '16px', width: '16px', left: useAI ? '20px' : '4px', bottom: '4px', backgroundColor: 'white', transition: '.4s', borderRadius: '50%' }}></span>
+                            </div>
+                            <span style={{ fontSize: '0.95rem', userSelect: 'none' }}>
+                                Enable AI Distractors <span style={{ fontSize: '0.8em', color: 'var(--primary)', marginLeft: '4px' }}>(Smarter Options)</span>
+                            </span>
+                        </label>
+                    </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', maxWidth: '600px', margin: '0 auto' }}>
                         <button
