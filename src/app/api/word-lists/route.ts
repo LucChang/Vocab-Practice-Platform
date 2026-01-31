@@ -8,12 +8,13 @@ export async function GET() {
 
         if (!user) {
             // Create a demo user if none exists
-            user = await prisma.user.create({
-                data: {
-                    email: 'demo@vocalab.com',
-                    passwordHash: 'hashed_password', // In real app, hash this
-                },
-            });
+            // user = await prisma.user.create({
+            //     data: {
+            //         email: 'demo@vocalab.com',
+            //         passwordHash: 'hashed_password', // In real app, hash this
+            //     },
+            // });
+            return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
         const wordLists = await prisma.wordList.findMany({
