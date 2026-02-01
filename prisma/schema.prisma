@@ -3,10 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
 }
+
 model User {
   id           String   @id @default(uuid())
   email        String   @unique
@@ -14,8 +13,8 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  wordLists    WordList[]
-  sessions     PracticeSession[]
+  wordLists WordList[]
+  sessions  PracticeSession[]
 }
 
 model WordList {
@@ -25,13 +24,13 @@ model WordList {
   tags        String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  
-  words       Word[]
-  questions   Question[]
-  sessions    PracticeSession[]
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  words     Word[]
+  questions Question[]
+  sessions  PracticeSession[]
 }
 
 model Word {
@@ -42,9 +41,9 @@ model Word {
   example      String?
   difficulty   Int?     @default(1)
   createdAt    DateTime @default(now())
-  
-  wordListId   String
-  wordList     WordList @relation(fields: [wordListId], references: [id], onDelete: Cascade)
+
+  wordListId String
+  wordList   WordList @relation(fields: [wordListId], references: [id], onDelete: Cascade)
 }
 
 model Question {
@@ -56,39 +55,39 @@ model Question {
   explanation     String?
   createdByGemini Boolean  @default(false)
   createdAt       DateTime @default(now())
-  
-  wordListId      String
-  wordList        WordList @relation(fields: [wordListId], references: [id], onDelete: Cascade)
-  
-  answers         Answer[]
+
+  wordListId String
+  wordList   WordList @relation(fields: [wordListId], references: [id], onDelete: Cascade)
+
+  answers Answer[]
 }
 
 model PracticeSession {
-  id           String   @id @default(uuid())
-  startedAt    DateTime @default(now())
+  id           String    @id @default(uuid())
+  startedAt    DateTime  @default(now())
   endedAt      DateTime?
-  correctCount Int      @default(0)
-  totalCount   Int      @default(0)
-  
-  userId       String
-  user         User     @relation(fields: [userId], references: [id])
-  
-  wordListId   String
-  wordList     WordList @relation(fields: [wordListId], references: [id])
-  
-  answers      Answer[]
+  correctCount Int       @default(0)
+  totalCount   Int       @default(0)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  wordListId String
+  wordList   WordList @relation(fields: [wordListId], references: [id])
+
+  answers Answer[]
 }
 
 model Answer {
-  id          String   @id @default(uuid())
-  userAnswer  String
-  isCorrect   Boolean
-  timeSpent   Int?
-  createdAt   DateTime @default(now())
-  
-  sessionId   String
-  session     PracticeSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  
-  questionId  String
-  question    Question @relation(fields: [questionId], references: [id])
+  id         String   @id @default(uuid())
+  userAnswer String
+  isCorrect  Boolean
+  timeSpent  Int?
+  createdAt  DateTime @default(now())
+
+  sessionId String
+  session   PracticeSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id])
 }

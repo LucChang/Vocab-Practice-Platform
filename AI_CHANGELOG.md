@@ -2,7 +2,15 @@
 
 This file records the changes and modifications made by the AI assistant to the Vocab Learning Platform project.
 
-## 2026-01-09
+## 2026-02-01
+
+### Fix: Prisma 7 Compatibility Issue
+- **Action**: Downgrade Prisma to v5.22.0
+- **File**: `package.json`, `prisma/schema.prisma`
+- **Description**: Resolved a build error where Prisma 7 failed to correctly read the schema config on Windows with Chinese file paths (`Error: P1012`). Downgrading to a stable v5 version fixed the issue.
+
+## 2026-01-31
+
 
 ### Feature: Inline Word Editing
 - **Action**: Add Edit Functionality
